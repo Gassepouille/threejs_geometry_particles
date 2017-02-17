@@ -47,6 +47,10 @@ APP.Main = class Main {
 	stop(){
 		this._engine.stop();
 	}
+	//////////////////////////////////////////////////////////////////////////////
+	//              Where the Magic is supposed to happened
+	//////////////////////////////////////////////////////////////////////////////
+	
 	_addObject(){
 		var objLoader = new THREE.OBJLoader();
 		// Free Model from turbosquid :
@@ -55,10 +59,26 @@ APP.Main = class Main {
 			object.scale.multiplyScalar(0.1)
 			object.position.x = -3 // Model not well centered
 			object.traverse((child)=>{
-				child.material = new THREE.MeshBasicMaterial( {color: 0x880000} );
+				// child.material = new THREE.MeshBasicMaterial( {color: 0x880000} );
+				child.material = applyShaderMaterial();
 			})
 			this.scene.add( object );
 		});
+		
+		return;
+		
+		function applyShaderMaterial(){
+			var material = new THREE.ShaderMaterial({
+				uniforms: {
+					time: { value: 1.0 },
+					resolution: { value: new THREE.Vector2() }
+				},
+				vertexShader: APP.Shaders.getParticlesVertex(),
+				fragmentShader: APP.Shaders.getParticlesFragment()
+
+			});
+			return material;
+		}
 	}
 	// Add skybox 
 	_addSkybox(){
