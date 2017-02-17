@@ -23,8 +23,8 @@ APP.Main = class Main {
 		
 		// Move camera around center
 		this._engine.onUpdateFcts.push((delta,now)=>{
-			var posX=5*Math.cos(now);
-			var posZ=5*Math.sin(now);
+			var posX=5*Math.cos(now/10);
+			var posZ=5*Math.sin(now/10);
 			this._camera.position.set(posX,3,posZ);
 			this._camera.lookAt(new THREE.Vector3(0,0,0));
 		})
@@ -39,6 +39,7 @@ APP.Main = class Main {
 		
 		this._addObject();
 		this._addLights();
+		this._addSkybox();
 	}
 	start(){
 		this._engine.start();
@@ -58,6 +59,27 @@ APP.Main = class Main {
 			})
 			this.scene.add( object );
 		});
+	}
+	// Add skybox 
+	_addSkybox(){
+		// https://stemkoski.github.io/Three.js/Skybox.html
+		var imagePrefix = "skybox/thefog_";
+		var directions  = ["lf", "rt", "up", "dn", "ft", "bk"];
+		var imageSuffix = ".png";
+		var skyGeometry = new THREE.CubeGeometry( 8, 8, 8 );	
+		var textureLoader = new THREE.TextureLoader();
+
+		var materialArray = [];
+		for (var i = 0; i < 6; i++){
+			materialArray.push( new THREE.MeshBasicMaterial({
+				map: textureLoader.load( imagePrefix + directions[i] + imageSuffix ),
+				side: THREE.BackSide
+			}));
+		}
+		
+		var skyMaterial = new THREE.MultiMaterial( materialArray );
+		var skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
+		this.scene.add( skyBox );
 	}
 	_addLights(){
 		// add ambient light
