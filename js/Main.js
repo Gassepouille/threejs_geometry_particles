@@ -23,8 +23,8 @@ APP.Main = class Main {
 		
 		// Move camera around center
 		this._engine.onUpdateFcts.push((delta,now)=>{
-			var posX=5*Math.cos(now/10);
-			var posZ=5*Math.sin(now/10);
+			let posX=5*Math.cos(now/10);
+			let posZ=5*Math.sin(now/10);
 			this._camera.position.set(posX,3,posZ);
 			this._camera.lookAt(new THREE.Vector3(0,0,0));
 		})
@@ -52,24 +52,24 @@ APP.Main = class Main {
 	//////////////////////////////////////////////////////////////////////////////
 	
 	_addObject(){
-		var objLoader = new THREE.OBJLoader();
+		let objLoader = new THREE.OBJLoader();
 		// Free Model from turbosquid :
 		// https://www.turbosquid.com/3d-models/real-time-wolf-3d-model/236013
 		objLoader.load( 'models/wolf-obj.obj', ( object ) => {
-			var group = new THREE.Group();
+			let group = new THREE.Group();
 			group.scale.multiplyScalar(0.1)
 			group.position.x = -3 // Model not well centered
 			object.traverse((child)=>{
 				if(!child.geometry) return;
-				var geometry = child.geometry;
-				var material = applyShaderMaterial();
+				let geometry = child.geometry;
+				let material = _applyShaderMaterial();
 				
 				this._engine.onUpdateFcts.push((delta,now)=>{
-					var value = Math.max(0.7, Math.sin(now)*2)
+					let value = Math.max(0.7, Math.sin(now)*2)
 					material.uniforms.amplitude.value = value;
 				})
 
-				var points = new THREE.Points( geometry, material );
+				let points = new THREE.Points( geometry, material );
 				group.add(points)
 			})
 			this.scene.add( group );
@@ -77,8 +77,8 @@ APP.Main = class Main {
 		
 		return;
 		
-		function applyShaderMaterial(){
-			var material = new THREE.ShaderMaterial({
+		function _applyShaderMaterial(){
+			let material = new THREE.ShaderMaterial({
 				uniforms: {
 					amplitude: { value: 0.7 },
 					color:     { value: new THREE.Color( 0x0020ff ) },
@@ -97,13 +97,13 @@ APP.Main = class Main {
 	// Add skybox 
 	_addSkybox(){
 		// https://stemkoski.github.io/Three.js/Skybox.html
-		var imagePrefix = "skybox/thefog_";
-		var directions  = ["lf", "rt", "up", "dn", "ft", "bk"];
-		var imageSuffix = ".png";
-		var skyGeometry = new THREE.CubeGeometry( 8, 8, 8 );	
-		var textureLoader = new THREE.TextureLoader();
+		let imagePrefix = "skybox/thefog_";
+		let directions  = ["lf", "rt", "up", "dn", "ft", "bk"];
+		let imageSuffix = ".png";
+		let skyGeometry = new THREE.CubeGeometry( 8, 8, 8 );	
+		let textureLoader = new THREE.TextureLoader();
 
-		var materialArray = [];
+		let materialArray = [];
 		for (var i = 0; i < 6; i++){
 			materialArray.push( new THREE.MeshBasicMaterial({
 				map: textureLoader.load( imagePrefix + directions[i] + imageSuffix ),
@@ -111,26 +111,26 @@ APP.Main = class Main {
 			}));
 		}
 		
-		var skyMaterial = new THREE.MultiMaterial( materialArray );
-		var skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
+		let skyMaterial = new THREE.MultiMaterial( materialArray );
+		let skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
 		this.scene.add( skyBox );
 	}
 	_addLights(){
 		// add ambient light
-		var light	= new THREE.AmbientLight( 0x020202 );
-		this.scene.add( light );
+		let lightAmbient	= new THREE.AmbientLight( 0x020202 );
+		this.scene.add( lightAmbient );
 		// add a light in front
-		var light	= new THREE.DirectionalLight('white', 1);
-		light.position.set(0.5, 0.5, 2);
-		this.scene.add( light );
+		let lightDirectional1	= new THREE.DirectionalLight('white', 1);
+		lightDirectional1.position.set(0.5, 0.5, 2);
+		this.scene.add( lightDirectional1 );
 		// add a light behind
-		var light	= new THREE.DirectionalLight('white', 0.75);
-		light.position.set(-0.5, -0.5, -2);
-		this.scene.add( light );
+		let lightDirectional2	= new THREE.DirectionalLight('white', 0.75);
+		lightDirectional2.position.set(-0.5, -0.5, -2);
+		this.scene.add( lightDirectional2 );
 	}
 	onWindowResize(){
-		var width  =  window.innerWidth;
-		var height =  window.innerHeight;
+		let width  =  window.innerWidth;
+		let height =  window.innerHeight;
 		this._camera.aspect = width / height;
 	        this._camera.updateProjectionMatrix();
 		this._renderer.setSize( width, height );

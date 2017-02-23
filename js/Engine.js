@@ -7,11 +7,11 @@ APP.Engine = class Engine {
 		this.onUpdateFcts = [];
 	}
 	start(){
-		var _this = this;
+		let _this = this;
 		// Animate
 		this._updateLoop = requestAnimationFrame(function animate(nowMsec){
 			_this._updateLoop = requestAnimationFrame( animate );
-			var myDelta = _this._getDelta(nowMsec);
+			let myDelta = _this._getDelta(nowMsec);
 			_this._update(myDelta/1000,nowMsec/1000);
 		})
 	}
@@ -29,7 +29,7 @@ APP.Engine = class Engine {
 		// get time of the last call
 		this._lastTimeMsec	= this._lastTimeMsec || nowMsec-1000/60;
 		// get delta between now and last call
-		var deltaMsec	= Math.min(200, nowMsec - this._lastTimeMsec);
+		let deltaMsec	= Math.min(200, nowMsec - this._lastTimeMsec);
 		// set last time as now
 		this._lastTimeMsec	= nowMsec;
 
