@@ -56,13 +56,23 @@ APP.Main = class Main {
 		// Free Model from turbosquid :
 		// https://www.turbosquid.com/3d-models/real-time-wolf-3d-model/236013
 		objLoader.load( 'models/wolf-obj.obj', ( object ) => {
-			object.scale.multiplyScalar(0.1)
-			object.position.x = -3 // Model not well centered
+			var group = new THREE.Group();
+			group.scale.multiplyScalar(0.1)
+			group.position.x = -3 // Model not well centered
 			object.traverse((child)=>{
-				// child.material = new THREE.MeshBasicMaterial( {color: 0x880000} );
-				child.material = applyShaderMaterial();
+				if(!child.geometry) return;
+				var geometry = child.geometry;
+				var material = applyShaderMaterial();
+				
+				this._engine.onUpdateFcts.push((delta,now)=>{
+					var value = Math.max(0.7, Math.sin(now)*2)
+					material.uniforms.amplitude.value = value;
+				})
+
+				var points = new THREE.Points( geometry, material );
+				group.add(points)
 			})
-			this.scene.add( object );
+			this.scene.add( group );
 		});
 		
 		return;
@@ -70,11 +80,15 @@ APP.Main = class Main {
 		function applyShaderMaterial(){
 			var material = new THREE.ShaderMaterial({
 				uniforms: {
-					time: { value: 1.0 },
-					resolution: { value: new THREE.Vector2() }
+					amplitude: { value: 0.7 },
+					color:     { value: new THREE.Color( 0x0020ff ) },
+					texture:   { value: new THREE.TextureLoader().load( "imgs/spark1.png" ) }
 				},
 				vertexShader: APP.Shaders.getParticlesVertex(),
-				fragmentShader: APP.Shaders.getParticlesFragment()
+				fragmentShader: APP.Shaders.getParticlesFragment(),
+				blending : THREE.AdditiveBlending,
+				depthWrite : false,
+				transparent : true,
 
 			});
 			return material;

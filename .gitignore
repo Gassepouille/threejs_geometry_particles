@@ -1,0 +1,5 @@
+# Mac finder cache file
+*.DS_Store
+
+# npm packages for tooling
+node_modules
