@@ -4,10 +4,11 @@ APP.Shaders = class Shaders {
 	static getParticlesVertex(){
 		return `
 		uniform float amplitude;
+		attribute float size;
 		
 		void main() {
 			vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-			gl_PointSize = amplitude *  -mvPosition.z ;
+			gl_PointSize = size * -mvPosition.z;
 			gl_Position = projectionMatrix * mvPosition;
 		}`;
 	}

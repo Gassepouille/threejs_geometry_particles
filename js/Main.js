@@ -23,9 +23,9 @@ APP.Main = class Main {
 		
 		// Move camera around center
 		this._engine.onUpdateFcts.push((delta,now)=>{
-			let posX=5*Math.cos(now/10);
-			let posZ=5*Math.sin(now/10);
-			this._camera.position.set(posX,3,posZ);
+			let posX=3*Math.cos(now/10);
+			let posZ=3*Math.sin(now/10);
+			this._camera.position.set(posX,2,posZ);
 			this._camera.lookAt(new THREE.Vector3(0,0,0));
 		})
 		
@@ -59,14 +59,25 @@ APP.Main = class Main {
 			let group = new THREE.Group();
 			group.scale.multiplyScalar(0.1)
 			group.position.x = -3 // Model not well centered
+			group.position.y = -0.5 // Model not well centered
 			object.traverse((child)=>{
 				if(!child.geometry) return;
 				let geometry = child.geometry;
 				let material = _applyShaderMaterial();
-				
+				// Add size attribute
+				let verticesNumber = geometry.attributes.position.array.length;
+				let sizes = new Float32Array( verticesNumber );
+				for (var i = 0; i < sizes.length; i++) {
+					sizes[i] = 1;
+				}
+				geometry.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
+
+
 				this._engine.onUpdateFcts.push((delta,now)=>{
-					let value = Math.max(0.7, Math.sin(now)*2)
-					material.uniforms.amplitude.value = value;
+					for ( var i = 0; i < sizes.length; i++ ) {
+						geometry.attributes.size.array[ i ] = 1 + Math.sin(  i + now * 5 ) * 5;
+					}
+					geometry.attributes.size.needsUpdate = true;
 				})
 
 				let points = new THREE.Points( geometry, material );
@@ -80,7 +91,7 @@ APP.Main = class Main {
 		function _applyShaderMaterial(){
 			let material = new THREE.ShaderMaterial({
 				uniforms: {
-					amplitude: { value: 0.7 },
+					// amplitude: { value: 0.7 },
 					color:     { value: new THREE.Color( 0x0020ff ) },
 					texture:   { value: new THREE.TextureLoader().load( "imgs/spark1.png" ) }
 				},
@@ -94,6 +105,10 @@ APP.Main = class Main {
 			return material;
 		}
 	}
+	//////////////////////////////////////////////////////////////////////////////
+	//              End of magic
+	//////////////////////////////////////////////////////////////////////////////
+	
 	// Add skybox 
 	_addSkybox(){
 		// https://stemkoski.github.io/Three.js/Skybox.html
