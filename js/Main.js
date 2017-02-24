@@ -57,15 +57,26 @@ APP.Main = class Main {
 		// https://www.turbosquid.com/3d-models/real-time-wolf-3d-model/236013
 		objLoader.load( 'models/wolf-obj.obj', ( object ) => {
 			let group = new THREE.Group();
-			group.scale.multiplyScalar(0.1)
-			group.position.x = -3 // Model not well centered
-			group.position.y = -0.5 // Model not well centered
+			group.scale.multiplyScalar(0.1);
+			group.position.x = -3; // Model not well centered
+			group.position.y = -0.5; // Model not well centered
+			// Transformation to light magic
 			object.traverse((child)=>{
 				if(!child.geometry) return;
+				// Add white ass geometry
+				child.material = new THREE.MeshLambertMaterial({
+					color:0xffffff,
+					transparent:true,
+					opacity:0.7,
+					depthWrite:false,
+					emissive:0xffffff,
+					emissiveIntensity : 1,
+				});
+				// Add points cloud to make things pritty
 				let geometry = child.geometry;
 				let material = _applyShaderMaterial();
-				// Add size attribute
-				let verticesNumber = geometry.attributes.position.array.length;
+				// Add size attribute (verticesNumber divided by 3, see bufferGeometry position attribute)
+				let verticesNumber = geometry.attributes.position.array.length/3;
 				let sizes = new Float32Array( verticesNumber );
 				for (var i = 0; i < sizes.length; i++) {
 					sizes[i] = 1;
@@ -81,8 +92,9 @@ APP.Main = class Main {
 				})
 
 				let points = new THREE.Points( geometry, material );
-				group.add(points)
+				group.add(points);
 			})
+			group.add(object);
 			this.scene.add( group );
 		});
 		
