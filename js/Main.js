@@ -65,35 +65,58 @@ APP.Main = class Main {
 				if(!child.geometry) return;
 				// Add white ass geometry
 				child.material = new THREE.MeshLambertMaterial({
-					color:0xffffff,
+					color:0xaaaaff,
 					transparent:true,
-					opacity:0.7,
+					opacity:0.3,
 					depthWrite:false,
-					emissive:0xffffff,
+					emissive:0xaaaaff,
 					emissiveIntensity : 1,
 				});
 				// Add points cloud to make things pritty
-				let geometry = child.geometry;
+				// let geometry = child.geometry;
+				// let material = _applyShaderMaterial();
+				// // Add size attribute (verticesNumber divided by 3, see bufferGeometry position attribute)
+				// let verticesNumber = geometry.attributes.position.array.length/3;
+				// let sizes = new Float32Array( verticesNumber );
+				// for (var i = 0; i < sizes.length; i++) {
+				// 	sizes[i] = 1;
+				// }
+				// geometry.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
+				// 
+				// 
+				// this._engine.onUpdateFcts.push((delta,now)=>{
+				// 	for ( var i = 0; i < sizes.length; i++ ) {
+				// 		geometry.attributes.size.array[ i ] = 1 + Math.sin(  i + now * 5 ) * 5;
+				// 	}
+				// 	geometry.attributes.size.needsUpdate = true;
+				// })
+				// let points = new THREE.Points( geometry2, material );
+				// group.add(points);
+				
 				let material = _applyShaderMaterial();
-				// Add size attribute (verticesNumber divided by 3, see bufferGeometry position attribute)
-				let verticesNumber = geometry.attributes.position.array.length/3;
-				let sizes = new Float32Array( verticesNumber );
-				for (var i = 0; i < sizes.length; i++) {
+				let geometry2 = new THREE.BufferGeometry();
+				let number = child.geometry.attributes.position.count/10;
+				let vertices = THREE.GeometryUtils.randomPointsInBufferGeometry(child.geometry,number);
+				let positions = new Float32Array( vertices.length*3 );
+				let sizes = new Float32Array( vertices.length );
+				for (var i = 0, i3 = 0; i < vertices.length; i++, i3+=3) {
 					sizes[i] = 1;
+					positions[i3+0] = vertices[i].x;
+					positions[i3+1] = vertices[i].y;
+					positions[i3+2] = vertices[i].z;
 				}
-				geometry.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
-
-
+				geometry2.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
+				geometry2.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
 				this._engine.onUpdateFcts.push((delta,now)=>{
 					for ( var i = 0; i < sizes.length; i++ ) {
-						geometry.attributes.size.array[ i ] = 1 + Math.sin(  i + now * 5 ) * 5;
+						geometry2.attributes.size.array[ i ] = 1 + Math.sin(  i + now * 5 ) * 5;
 					}
-					geometry.attributes.size.needsUpdate = true;
+					geometry2.attributes.size.needsUpdate = true;
 				})
-
-				let points = new THREE.Points( geometry, material );
+				let points = new THREE.Points( geometry2, material );
 				group.add(points);
 			})
+			
 			group.add(object);
 			this.scene.add( group );
 		});
