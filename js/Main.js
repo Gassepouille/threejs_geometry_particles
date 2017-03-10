@@ -56,11 +56,13 @@ APP.Main = class Main {
 		// Free Model from turbosquid :
 		// https://www.turbosquid.com/3d-models/real-time-wolf-3d-model/236013
 		objLoader.load( 'models/wolf-obj.obj', ( object ) => {
+			let particleNumber = 500;
 			let group = new THREE.Group();
 			group.scale.multiplyScalar(0.1);
 			group.position.x = -3; // Model not well centered
 			group.position.y = -0.5; // Model not well centered
 			// Transformation to light magic
+			let geometries = [];
 			object.traverse((child)=>{
 				if(!child.geometry) return;
 				// Add white ass geometry
@@ -72,51 +74,47 @@ APP.Main = class Main {
 					emissive:0xaaaaff,
 					emissiveIntensity : 1,
 				});
-				// Add points cloud to make things pritty
-				// let geometry = child.geometry;
-				// let material = _applyShaderMaterial();
-				// // Add size attribute (verticesNumber divided by 3, see bufferGeometry position attribute)
-				// let verticesNumber = geometry.attributes.position.array.length/3;
-				// let sizes = new Float32Array( verticesNumber );
-				// for (var i = 0; i < sizes.length; i++) {
-				// 	sizes[i] = 1;
-				// }
-				// geometry.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
-				// 
-				// 
-				// this._engine.onUpdateFcts.push((delta,now)=>{
-				// 	for ( var i = 0; i < sizes.length; i++ ) {
-				// 		geometry.attributes.size.array[ i ] = 1 + Math.sin(  i + now * 5 ) * 5;
-				// 	}
-				// 	geometry.attributes.size.needsUpdate = true;
-				// })
-				// let points = new THREE.Points( geometry2, material );
-				// group.add(points);
-				
-				let material = _applyShaderMaterial();
-				let geometry2 = new THREE.BufferGeometry();
-				let number = child.geometry.attributes.position.count/10;
-				let vertices = THREE.GeometryUtils.randomPointsInBufferGeometry(child.geometry,number);
-				let positions = new Float32Array( vertices.length*3 );
-				let sizes = new Float32Array( vertices.length );
-				for (var i = 0, i3 = 0; i < vertices.length; i++, i3+=3) {
-					sizes[i] = 1;
-					positions[i3+0] = vertices[i].x;
-					positions[i3+1] = vertices[i].y;
-					positions[i3+2] = vertices[i].z;
+				geometries.push(child.geometry.clone());
+			})
+			//////////////////////////////////////////////////////////////////////////////
+			//              HMake things pritty
+			//////////////////////////////////////////////////////////////////////////////
+			
+			// Trick to get proper attributes for buffer geometry merge
+			var geoBuffer = new THREE.BufferGeometry();
+			var geometryTemp = new THREE.Geometry();
+			for (var i = 0; i < geometries.length; i++) {
+				let geometry = new THREE.Geometry().fromBufferGeometry(geometries[i]);
+				geometryTemp.merge(geometry);
+			}
+			geoBuffer.fromGeometry(geometryTemp)
+			
+			let material = _applyShaderMaterial();
+			let geometry2 = new THREE.BufferGeometry();
+			
+			let vertices = THREE.GeometryUtils.randomPointsInBufferGeometry(geoBuffer,particleNumber);
+			let positions = new Float32Array( vertices.length*3 );
+			let sizes = new Float32Array( vertices.length );
+			for (var i = 0, i3 = 0; i < vertices.length; i++, i3+=3) {
+				sizes[i] = 1;
+				positions[i3+0] = vertices[i].x;
+				positions[i3+1] = vertices[i].y;
+				positions[i3+2] = vertices[i].z;
+			}
+			geometry2.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
+			geometry2.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+			
+			this._engine.onUpdateFcts.push((delta,now)=>{
+				for ( var i = 0; i < sizes.length; i++ ) {
+					geometry2.attributes.size.array[ i ] = 1 + Math.sin(  i + now * 5 ) * 5;
 				}
-				geometry2.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
-				geometry2.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
-				this._engine.onUpdateFcts.push((delta,now)=>{
-					for ( var i = 0; i < sizes.length; i++ ) {
-						geometry2.attributes.size.array[ i ] = 1 + Math.sin(  i + now * 5 ) * 5;
-					}
-					geometry2.attributes.size.needsUpdate = true;
-				})
-				let points = new THREE.Points( geometry2, material );
-				group.add(points);
+				geometry2.attributes.size.needsUpdate = true;
 			})
 			
+			let points = new THREE.Points( geometry2, material );
+			group.add(points);
+			
+			// Add ghost like form
 			group.add(object);
 			this.scene.add( group );
 		});
