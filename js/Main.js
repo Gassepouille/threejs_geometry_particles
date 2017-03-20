@@ -12,6 +12,7 @@ APP.Main = class Main {
 		// Camera + scene
 		this._camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, 1000);
 	        this.scene = new THREE.Scene();
+		this.scene.fog = new THREE.FogExp2( 0xb4c9ed, 0.15 );
 		
 		// Engine
 		this._engine = new APP.Engine();
@@ -66,7 +67,7 @@ APP.Main = class Main {
 			object.traverse((child)=>{
 				if(!child.geometry) return;
 				// Add white ass geometry
-				child.material = new THREE.MeshLambertMaterial({
+				child.material = new THREE.MeshPhongMaterial({
 					color:0xaaaaff,
 					transparent:true,
 					opacity:0.3,
@@ -77,20 +78,59 @@ APP.Main = class Main {
 				geometries.push(child.geometry.clone());
 			})
 			//////////////////////////////////////////////////////////////////////////////
-			//              HMake things pritty
+			//              Make things pritty
 			//////////////////////////////////////////////////////////////////////////////
 			
 			// Trick to get proper attributes for buffer geometry merge
-			var geoBuffer = new THREE.BufferGeometry();
-			var geometryTemp = new THREE.Geometry();
+			let geoBuffer = new THREE.BufferGeometry();
+			let geometryTemp = new THREE.Geometry();
 			for (var i = 0; i < geometries.length; i++) {
 				let geometry = new THREE.Geometry().fromBufferGeometry(geometries[i]);
 				geometryTemp.merge(geometry);
 			}
 			geoBuffer.fromGeometry(geometryTemp)
+						
+			//////////////////////////////////////////////////////////////////////////////
+			//              Create spline to move around model
+			//////////////////////////////////////////////////////////////////////////////
 			
+			let pointsNumber = 100;
+			let pointsSpline = [];
+			let faces = geometryTemp.faces;
+			let randomIndex = null;
+			for (var i = 0; i < pointsNumber; i++) {
+				if(randomIndex === null) randomIndex = Math.ceil(Math.random()*(faces.length - 1));
+				let point = THREE.GeometryUtils.randomPointInFace( faces[randomIndex], geometryTemp);
+				point.add(faces[randomIndex].normal.multiplyScalar(1))
+				pointsSpline.push(point);
+				randomIndex+=1;
+			}
+			// var curve = new THREE.SplineCurve(pointsSpline);
+			let curve = new THREE.CatmullRomCurve3(pointsSpline);
+			
+			let geometry3 = new THREE.BoxBufferGeometry( 0.5, 0.5, 0.5 );
+			let material3 = new THREE.MeshBasicMaterial( {color: 0xff0000} );
+			let cube = new THREE.Mesh( geometry3, material3 );
+			group.add( cube );
+			console.log(curve)
+			var looptime = 10;
+			this._engine.onUpdateFcts.push((delta,now)=>{
+				
+				let t = ( now % looptime ) / looptime;
+				// Animate cube around spline
+				let coord = curve.getPointAt( t );
+				cube.position.copy(coord)
+			});
+			
+			
+			
+			
+			
+			
+						
+			// Create points geometry
 			let material = _applyShaderMaterial();
-			let geometry2 = new THREE.BufferGeometry();
+			let geometryPoints = new THREE.BufferGeometry();
 			
 			let vertices = THREE.GeometryUtils.randomPointsInBufferGeometry(geoBuffer,particleNumber);
 			let positions = new Float32Array( vertices.length*3 );
@@ -101,20 +141,25 @@ APP.Main = class Main {
 				positions[i3+1] = vertices[i].y;
 				positions[i3+2] = vertices[i].z;
 			}
-			geometry2.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
-			geometry2.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+			geometryPoints.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
+			geometryPoints.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
 			
+			// Update attributes
 			this._engine.onUpdateFcts.push((delta,now)=>{
 				for ( var i = 0; i < sizes.length; i++ ) {
-					geometry2.attributes.size.array[ i ] = 1 + Math.sin(  i + now * 5 ) * 5;
+					geometryPoints.attributes.size.array[ i ] = 1 + Math.sin(  i + now * 5 ) * 5;
 				}
-				geometry2.attributes.size.needsUpdate = true;
+				geometryPoints.attributes.size.needsUpdate = true;
 			})
 			
-			let points = new THREE.Points( geometry2, material );
+			// Create points object and add to group
+			let points = new THREE.Points( geometryPoints, material );
 			group.add(points);
 			
-			// Add ghost like form
+			//////////////////////////////////////////////////////////////////////////////
+			//             Add ghost like form
+			//////////////////////////////////////////////////////////////////////////////
+
 			group.add(object);
 			this.scene.add( group );
 		});
@@ -183,6 +228,4 @@ APP.Main = class Main {
 	        this._camera.updateProjectionMatrix();
 		this._renderer.setSize( width, height );
 	}
-	
-	
 }
